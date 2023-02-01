@@ -3,6 +3,7 @@
 blockchain = [1]
 
 def add_value():
+    #function that appends values
     blockchain.append([blockchain[0], 5.3])
     print(blockchain)
 
