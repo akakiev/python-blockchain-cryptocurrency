@@ -19,13 +19,15 @@ def add_value(transaction_amount, last_transaction=[1]):
 
 def get_user_input():
     '''Returns the input of the user (a new transaction amount) as a float.'''
-    return float(input('Your transaction amount please: '))
+    user_input = float(input('Your transaction amount please: '))
+    return user_input
 
 
 tx_amount = get_user_input()
 add_value(tx_amount)
 tx_amount = get_user_input()
-add_value(last_transaction=get_last_blockchain_value(), transaction_amount=tx_amount)
+add_value(last_transaction=get_last_blockchain_value(), 
+          transaction_amount=tx_amount)
 tx_amount = get_user_input()
 add_value(tx_amount, get_last_blockchain_value())
 
