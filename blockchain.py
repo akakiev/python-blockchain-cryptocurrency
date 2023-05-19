@@ -55,7 +55,7 @@ def mine_block():
     last_block = blockchain[-1]
     hashed_block = hash_block(last_block)
     block = {
-        'previous_hash': 'Default',
+        'previous_hash': hashed_block,
         'index': len(blockchain), 
         'transactions': open_transactions
     }
@@ -70,7 +70,7 @@ def get_transaction_value():
 
 
 def get_user_choice():
-    user_input = input('Your choice')
+    user_input = input('Your choice: ')
     return user_input
 
 
@@ -84,6 +84,7 @@ def print_blockchain_elements():
 
 
 def verify_chain():
+    """ Verify the current blockchain and return True if it's valid, False otherwise."""
     for (index, block) in enumerate(blockchain):
         if index == 0:
             continue 
@@ -93,6 +94,8 @@ def verify_chain():
         
 waiting_for_input = True
 
+# A while loop for the user input interface
+# It's a loop that exits once waiting_for_input becomes False or when break is called
 while waiting_for_input:
     print('Please choose')
     print('1: Add a new transaction value')
