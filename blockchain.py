@@ -3,7 +3,7 @@ MINING_REWARD = 10
 
 genesis_block = {
     'previous_hash': '',
-    'index': 0, 
+    'index': 0,
     'transactions': []
 }
 blockchain = [genesis_block]
@@ -18,6 +18,8 @@ def hash_block(block):
 
 def get_balance(participant):
     tx_sender = [[tx['amount'] for tx in block['transactions'] if tx['sender'] == participant] for block in blockchain]
+    open_tx_sender = [tx['amount'] for tx in open_transactions if tx['sender'] == participant]
+    tx_sender.append(open_tx_sender)
     amount_sent = 0
     for tx in tx_sender:
         if len(tx) > 0:
@@ -36,6 +38,11 @@ def get_last_blockchain_value():
     return blockchain[-1]
 
 
+def verify_transaction(transaction):
+    sender_balance = get_balance(transaction['sender'])
+    return sender_balance >= transaction['amount']
+
+
 def add_transaction(recipient, sender=owner, amount=1.0):
     '''Append a new value as well as the last blockchain value to the blockchain
     
@@ -47,10 +54,14 @@ def add_transaction(recipient, sender=owner, amount=1.0):
     transaction = {
         'sender': sender, 
         'recipient': recipient, 
-        'amount': amount}
-    open_transactions.append(transaction)
-    participants.add(sender)
-    participants.add(recipient)
+        'amount': amount
+    }
+    if verify_transaction(transaction): 
+        open_transactions.append(transaction)
+        participants.add(sender)
+        participants.add(recipient)
+        return True
+    return False
 
 
 def mine_block():
@@ -61,11 +72,12 @@ def mine_block():
         'recipient': owner,
         'amount': MINING_REWARD
     }
-    open_transactions.append(reward_transaction)
+    copied_transactions = open_transactions[:]
+    copied_transactions.append(reward_transaction)
     block = {
         'previous_hash': hashed_block,
-        'index': len(blockchain), 
-        'transactions': open_transactions
+        'index': len(blockchain),
+        'transactions': copied_transactions
     }
     blockchain.append(block)
     return True
@@ -78,6 +90,7 @@ def get_transaction_value():
 
 
 def get_user_choice():
+    """Prompts the user for its choice and return it."""
     user_input = input('Your choice: ')
     return user_input
 
@@ -95,7 +108,7 @@ def verify_chain():
     """ Verify the current blockchain and return True if it's valid, False otherwise."""
     for (index, block) in enumerate(blockchain):
         if index == 0:
-            continue 
+            continue
         if block['previous_hash'] != hash_block(blockchain[index - 1]):
             return False
     return True
@@ -117,11 +130,14 @@ while waiting_for_input:
         tx_data = get_transaction_value()
         recipient, amount = tx_data
         # Add the transaction amount to the blockchain
-        add_transaction(recipient, amount=amount)
+        if add_transaction(recipient, amount=amount):
+            print('Added transaction!')
+        else:
+            print('Transaction failed!')
         print(open_transactions)
     elif user_choice == '2':
-         if mine_block():
-             open_transactions = []
+        if mine_block():
+            open_transactions = []
     elif user_choice == '3':
         print_blockchain_elements()
     elif user_choice == '4':
@@ -130,16 +146,18 @@ while waiting_for_input:
         if len(blockchain) >= 1:
             blockchain[0] = {
                 'previous_hash': '',
-                'index': 0, 
+                'index': 0,
                 'transactions': [{'sender': 'Chris', 'recipient': 'Serhii', 'amount': 100.0}]
         }
     elif user_choice == 'q':
+        # This will lead to the loop to exist because it's running condition becomes False
         waiting_for_input = False
     else:
         print('Input was invalid, please pick a value from the list!')
     if not verify_chain():
         print_blockchain_elements()
         print('Invalid blockchain!')
+        # Break out of the loop
         break
     print(get_balance('Serhii'))
 else:
