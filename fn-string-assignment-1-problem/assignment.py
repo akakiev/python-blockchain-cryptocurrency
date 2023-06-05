@@ -23,5 +23,5 @@ def fixed_tweaked_func(func, *args):
     result = args[0]
     for i in args[1:]:
         if i > result: result = i
-    print(f'{result:.20f}')
+    print(f'{result:^20}')
 fixed_tweaked_func(lambda x:x, 1,2,5,4,3)
