@@ -1,6 +1,7 @@
 from functools import reduce
 import hashlib as hl
 import json
+from collections import OrderedDict
 # The reward we give to miners (for creating a new block)
 MINING_REWARD = 10
 
@@ -26,7 +27,7 @@ def hash_block(block):
     Arguments:
         :block: The block that should be hashed.
     """
-    return hl.sha256(json.dumps(block).encode()).hexdigest()
+    return hl.sha256(json.dumps(block, sort_keys=True).encode()).hexdigest()
 
 
 def valid_proof(transactions, last_hash, proof):
@@ -81,11 +82,12 @@ def add_transaction(recipient, sender=owner, amount=1.0):
         :recipient: The recipient of the coins.
         :amount: The amount of coins sent with the transaction (default = 1.0)
     '''
-    transaction = {
-        'sender': sender, 
-        'recipient': recipient, 
-        'amount': amount
-    }
+    # transaction = {
+    #     'sender': sender, 
+    #     'recipient': recipient, 
+    #     'amount': amount
+    # }
+    transaction = OrderedDict([('sender', sender), ('recipient', recipient), ('amount', amount)])
     if verify_transaction(transaction): 
         open_transactions.append(transaction)
         participants.add(sender)
@@ -102,11 +104,12 @@ def mine_block():
     hashed_block = hash_block(last_block)
     proof = proof_of_work()
     # Miners should be reward, so let's create a reward transaction
-    reward_transaction = {
-        'sender': 'MINING',
-        'recipient': owner,
-        'amount': MINING_REWARD
-    }
+    # reward_transaction = {
+    #     'sender': 'MINING',
+    #     'recipient': owner,
+    #     'amount': MINING_REWARD
+    # }
+    reward_transaction = OrderedDict([('sender', 'MINING'), ('recipient', owner), ('amount', MINING_REWARD)])
     copied_transactions = open_transactions[:]
     copied_transactions.append(reward_transaction)
     block = {
