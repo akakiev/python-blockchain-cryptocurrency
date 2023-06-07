@@ -1,0 +1,14 @@
+{
+    "python.autoComplete.extraPaths": [
+
+    ],
+    "python.linting.lintOnSave": false,
+    "python.linting.pylintEnabled": false,
+    "python.linting.enabled": false,
+    "[python]": {
+        "editor.defaultFormatter": null,
+    },
+    "python.formatting.provider": "none",
+    "python.analysis.extraPaths": [],
+    "python.formatting.autopep8Path": ""
+}
