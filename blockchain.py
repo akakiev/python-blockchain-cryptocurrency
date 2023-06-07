@@ -15,7 +15,7 @@ genesis_block = {
     'previous_hash': '',
     'index': 0,
     'transactions': [],
-    'proof': 100
+    'proof': 100,
 }
 # Initializing our (empty) blockchain list
 blockchain = [genesis_block]
@@ -39,6 +39,7 @@ def load_data():
             updated_block = {
                 'previous_hash': block['previous_hash'],
                 'index': block['index'],
+                'proof': block['proof'],
                 'transactions': [OrderedDict(
                     [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])]) for tx in block['transactions']]
             }
@@ -76,10 +77,15 @@ def valid_proof(transactions, last_hash, proof):
         :last_hash: The previous block's hash which will be stored in the current block.
         :proof: The proof number we're testing.
     """
+    # Create a string with all the hash inputs
     guess = (str(transactions) + str(last_hash) + str(proof)).encode()
     print(guess)
+    # Hash the string
+    # IMPORTANT: This is NOT the same hash as will be stored in the previous_hash. It's a not a block's hash. It's only used for the proof-of-work algorithm.
     guess_hash = hash_string_256(guess)
     print(guess_hash)
+    # Only a hash (which is based on the above inputs) which starts with two 0s is treated as valid
+    # This condition is of course defined by you. You could also require 10 leading 0s - this would take significantly longer (and this allows you to control the speed at which new blocks can be added)
     return guess_hash[0:2] == '00'
 
 
@@ -90,6 +96,7 @@ def proof_of_work():
     last_block = blockchain[-1]
     last_hash = hash_block(last_block)
     proof = 0
+    # Try different PoW numbers and return the first valid one
     while not valid_proof(open_transactions, last_hash, proof):
         proof += 1
     return proof
@@ -177,7 +184,7 @@ def mine_block():
         'previous_hash': hashed_block,
         'index': len(blockchain),
         'transactions': copied_transactions,
-        'proof': proof
+        'proof': proof,
     }
     blockchain.append(block)
     return True
