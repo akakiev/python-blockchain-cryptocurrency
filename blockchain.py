@@ -1,8 +1,9 @@
 from functools import reduce
 import hashlib as hl
 from collections import OrderedDict
+import json
 
-# Import two functions from hash_util.py file.
+# Import two functions from hash_util.py file. Omit the ".py" in the import
 from hash_util import hash_string_256, hash_block
 
 # The reward we give to miners (for creating a new block)
@@ -18,7 +19,7 @@ genesis_block = {
 # Initializing our (empty) blockchain list
 blockchain = [genesis_block]
 # Unhandled transactions
-open_transactions =[]
+open_transactions = []
 # I am the owner of this blockchain node, hence this is my identifier
 owner = 'Serhii'
 # Registered participants: Myself + other people sending / receiving coins
@@ -28,8 +29,24 @@ def load_data():
     with open('blockchain.txt', mode='r') as f:
         file_content = f.readlines()
         global blockchain, open_transactions
-        blockchain = file_content[0] 
-        open_transactions = file_content[1]   
+        blockchain = json.loads(file_content[0][:-1])
+        updated_blockchain = []
+        for block in blockchain:
+            updated_block = {
+                'previous_hash': block['previous_hash'],
+                'index': block['index'],
+                'transactions': [OrderedDict(
+                    [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])]) for tx in block['transactions']]
+            }
+            updated_blockchain.append(updated_block)
+        blockchain = updated_blockchain
+        open_transactions = json.loads(file_content[1])
+        updated_transactions = [] 
+        for tx in open_transactions: 
+            updated_transaction = OrderedDict(
+                [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])])
+            updated_transactions.append(updated_transaction)
+        open_transactions = updated_transactions
 
 
 load_data()
@@ -37,19 +54,30 @@ load_data()
 
 def save_data():
     with open('blockchain.txt', mode='w') as f:
-        f.write(str(blockchain))
+        f.write(json.dumps(blockchain))
         f.write('\n')
-        f.write(str(open_transactions))
+        f.write(json.dumps(open_transactions))
 
 
 def valid_proof(transactions, last_hash, proof):
+    """Validate a proof of work number and see if it solves the puzzle algorithm (two leading 0s)
+
+    Arguments:
+        :transactions: The transactions of the block for which the proof is created.
+        :last_hash: The previous block's hash which will be stored in the current block.
+        :proof: The proof number we're testing.
+    """
     guess = (str(transactions) + str(last_hash) + str(proof)).encode()
+    print(guess)
     guess_hash = hash_string_256(guess)
     print(guess_hash)
     return guess_hash[0:2] == '00'
 
 
 def proof_of_work():
+    """Generate a proof of work for the open transactions, 
+    the hash of the previous block and a random number (which is guessed until it fits).
+    """
     last_block = blockchain[-1]
     last_hash = hash_block(last_block)
     proof = 0
@@ -68,6 +96,7 @@ def get_balance(participant):
     # This fetches sent amounts of open transactions
     open_tx_sender = [tx['amount'] for tx in open_transactions if tx['sender'] == participant]
     tx_sender.append(open_tx_sender)
+    print(tx_sender)
     amount_sent = reduce(lambda tx_sum, tx_amt: tx_sum + sum(tx_amt) if len(tx_amt) > 0 else tx_sum + 0, tx_sender, 0)
     tx_recipient = [[tx['amount'] for tx in block['transactions'] if tx['recipient'] == participant] for block in blockchain]
     amount_received = reduce(lambda tx_sum, tx_amt: tx_sum + sum(tx_amt) if len(tx_amt) > 0 else tx_sum + 0, tx_recipient, 0)
@@ -82,9 +111,17 @@ def get_last_blockchain_value():
 
 
 def verify_transaction(transaction):
+    """Verify a transaction by checking whether the sender has sufficient coins.
+
+    Arguments:
+        :transaction: The transaction that should be verified.
+    """
     sender_balance = get_balance(transaction['sender'])
     return sender_balance >= transaction['amount']
 
+# This function accepts two arguments.
+# One required one (transaction_amount) and one optional one (last_transaction)
+# The optional one is optional because it has a default value => [1]
 
 def add_transaction(recipient, sender=owner, amount=1.0):
     '''Append a new value as well as the last blockchain value to the blockchain
@@ -123,6 +160,8 @@ def mine_block():
     #     'amount': MINING_REWARD
     # }
     reward_transaction = OrderedDict([('sender', 'MINING'), ('recipient', owner), ('amount', MINING_REWARD)])
+    # Copy transaction instead of manipulating the original open_transactions list
+    # This ensures that if for some reason the mining should fail, we don't have the reward transaction stored in the open transactions
     copied_transactions = open_transactions[:]
     copied_transactions.append(reward_transaction)
     block = {
@@ -132,7 +171,6 @@ def mine_block():
         'proof': proof
     }
     blockchain.append(block)
-    save_data()
     return True
 
 def get_transaction_value():
@@ -149,6 +187,7 @@ def get_user_choice():
 
 
 def print_blockchain_elements():
+    """ Output all blocks of the blockchain. """
     # Output the blockchain list to the console
     for block in blockchain:
         print('Outputting Block')
@@ -171,6 +210,7 @@ def verify_chain():
 
 
 def verify_transactions():
+    """Verifies all open transactions."""
     return all([verify_transaction(tx) for tx in open_transactions])
         
 waiting_for_input = True
@@ -199,6 +239,7 @@ while waiting_for_input:
     elif user_choice == '2':
         if mine_block():
             open_transactions = []
+            save_data()
     elif user_choice == '3':
         print_blockchain_elements()
     elif user_choice == '4':
@@ -209,6 +250,7 @@ while waiting_for_input:
         else:
             print('There are invalid transactions')
     elif user_choice == 'h':
+        # Make sure that you don't try to "hack" the blockchain if it's empty
         if len(blockchain) >= 1:
             blockchain[0] = {
                 'previous_hash': '',
