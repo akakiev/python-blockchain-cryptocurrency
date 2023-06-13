@@ -17,10 +17,10 @@ blockchain = []
 open_transactions = []
 # I am the owner of this blockchain node, hence this is my identifier
 owner = 'Serhii'
-# Registered participants: Myself + other people sending / receiving coins
-participants = {'Serhii'}
+
 
 def load_data():
+    """Initialize blockchain + open transactions data from a file."""
     global blockchain, open_transactions
     try:
         with open('blockchain.txt', mode='r') as f:
@@ -60,7 +60,7 @@ def save_data():
             saveable_chain = [block.__dict__ for block in [Block(block_el.index, block_el.previous_hash, [tx.__dict__ for tx in block_el.transactions], block_el.proof, block_el.timestamp) for block_el in blockchain]]
             f.write(json.dumps(saveable_chain))
             f.write('\n')
-            saveable_tx= [tx.__dict__ for tx in open_transactions]
+            saveable_tx = [tx.__dict__ for tx in open_transactions]
             f.write(json.dumps(saveable_tx))
             # save_data = {
             #     'chain': blockchain,
@@ -80,12 +80,10 @@ def valid_proof(transactions, last_hash, proof):
         :proof: The proof number we're testing.
     """
     # Create a string with all the hash inputs
-    guess = (str(tx.to_ordered_dict() for tx in transactions) + str(last_hash) + str(proof)).encode()
-    print(guess)
+    guess = (str([tx.to_ordered_dict() for tx in transactions]) + str(last_hash) + str(proof)).encode()
     # Hash the string
     # IMPORTANT: This is NOT the same hash as will be stored in the previous_hash. It's a not a block's hash. It's only used for the proof-of-work algorithm.
     guess_hash = hash_string_256(guess)
-    print(guess_hash)
     # Only a hash (which is based on the above inputs) which starts with two 0s is treated as valid
     # This condition is of course defined by you. You could also require 10 leading 0s - this would take significantly longer (and this allows you to control the speed at which new blocks can be added)
     return guess_hash[0:2] == '00'
@@ -116,7 +114,7 @@ def get_balance(participant):
     tx_sender.append(open_tx_sender)
     print(tx_sender)
     amount_sent = reduce(lambda tx_sum, tx_amt: tx_sum + sum(tx_amt) if len(tx_amt) > 0 else tx_sum + 0, tx_sender, 0)
-    tx_recipient = [[tx.amount for tx in block.transactions if tx.sender == participant] for block in blockchain]
+    tx_recipient = [[tx.amount for tx in block.transactions if tx.recipient == participant] for block in blockchain]
     amount_received = reduce(lambda tx_sum, tx_amt: tx_sum + sum(tx_amt) if len(tx_amt) > 0 else tx_sum + 0, tx_recipient, 0)
     # Return the total balance
     return amount_received - amount_sent
@@ -233,8 +231,7 @@ while waiting_for_input:
     print('1: Add a new transaction value')
     print('2: Mine a new block')
     print('3: Output the blockchain blocks')
-    print('4: Output participants')
-    print('5: Check transaction validity')
+    print('4: Check transaction validity')
     print('q: Quit')
     user_choice = get_user_choice()
     if user_choice == '1':
@@ -253,8 +250,6 @@ while waiting_for_input:
     elif user_choice == '3':
         print_blockchain_elements()
     elif user_choice == '4':
-        print(participants)
-    elif user_choice == '5':
         if verify_transactions():
             print('All transactions are valid')
         else:
