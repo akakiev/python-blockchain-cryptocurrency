@@ -1,3 +1,6 @@
+# I am the owner of this blockchain node, hence this is my identifier
+owner = 'Serhii'
+
 class Node:
     def __init__(self):
         self.blockchain = []
