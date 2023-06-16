@@ -1,4 +1,4 @@
-# python-practical-guide
+# Python build Blockchain and Cryptocurrency
 This is the blockchain implementation, written in Python. 
 It includes functions for adding transactions, mining blocks, verifying the chain and more. 
 
