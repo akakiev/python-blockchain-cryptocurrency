@@ -6,6 +6,7 @@ from verification import Verification
 owner = 'Serhii'
 
 class Node:
+    # The node which runs the blockchain instance
     def __init__(self):
         # self.id = str(uuid4())
         self.id = 'Serhii'
