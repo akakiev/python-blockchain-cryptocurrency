@@ -1,6 +1,6 @@
 from uuid import uuid4
 from blockchain import Blockchain
-from verification import Verification
+from utility.verification import Verification
 
 # I am the owner of this blockchain node, hence this is my identifier
 owner = 'Serhii'
