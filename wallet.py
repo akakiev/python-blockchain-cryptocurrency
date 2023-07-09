@@ -4,6 +4,10 @@ import binascii
 
 class Wallet:
     def __init__(self):
+        self.private_key = None
+        self.public_key = None
+
+    def create_keys(self):
         private_key, public_key = self.generate_keys()
         self.private_key = private_key
         self.public_key = public_key
